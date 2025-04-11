@@ -3,11 +3,11 @@ name: Azure Static Web Apps CI/CD
 on:
   push:
     branches:
-      - master
+      - main # <-- Changed from master
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches:
-      - master
+      - main # <-- Changed from master
 
 jobs:
   build_and_deploy_job:
@@ -15,35 +15,37 @@ jobs:
     runs-on: ubuntu-latest
     name: Build and Deploy Job
     permissions:
-       id-token: write
-       contents: read
+        id-token: write
+        contents: read
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: true
           lfs: false
-      - name: Install OIDC Client from Core Package
-        run: npm install @actions/core@1.6.0 @actions/http-client
+      # Note: The OIDC install/get steps might be simplified or unnecessary with newer versions of actions/checkout or static-web-apps-deploy
+      # If you encounter issues, you might review the latest Azure Static Web Apps documentation for GitHub Actions setup.
+      - name: Install OIDC Client from Core Package 
+        run: npm install @actions/core@1.6.0 @actions/http-client 
       - name: Get Id Token
         uses: actions/github-script@v6
         id: idtoken
         with:
-           script: |
-               const coredemo = require('@actions/core')
-               return await coredemo.getIDToken()
-           result-encoding: string
+            script: |
+                const coredemo = require('@actions/core')
+                return await coredemo.getIDToken()
+            result-encoding: string
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
         with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_DELIGHTFUL_STONE_0935EA810 }}
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_DELIGHTFUL_STONE_0935EA810 }} # Ensure this secret name is correct
           action: "upload"
           ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
           # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
           app_location: "/" # App source code path
           api_location: "" # Api source code path - optional
           output_location: "" # Built app content directory - optional
-          github_id_token: ${{ steps.idtoken.outputs.result }}
+          github_id_token: ${{ steps.idtoken.outputs.result }} # This might be automatically handled by newer deploy actions if you remove the manual OIDC steps
           ###### End of Repository/Build Configurations ######
 
   close_pull_request_job:
@@ -56,3 +58,5 @@ jobs:
         uses: Azure/static-web-apps-deploy@v1
         with:
           action: "close"
+          # No API token needed for close action typically, but confirm if your setup requires it.
+          # azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_DELIGHTFUL_STONE_0935EA810 }}
